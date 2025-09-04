@@ -1,0 +1,21 @@
+{
+  "hotels": [
+    {
+      "name": "Seaside Hotel ",
+      "description": "Near the beach",
+      "amenities": [
+        "WiFi",
+        "Pool"
+      ],
+      "id": "1"
+    },
+    {
+      "id": "2",
+      "name": "City Center Inn",
+      "description": "Downtown",
+      "amenities": [
+        "WiFi"
+      ]
+    }
+  ]
+}

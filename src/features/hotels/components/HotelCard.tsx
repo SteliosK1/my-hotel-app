@@ -1,44 +1,76 @@
 // src/features/hotels/components/HotelCard.tsx
-import { Card, Heading, Text, Stack, Badge, HStack, Button } from "@chakra-ui/react";
+import {
+  Card,
+  Heading,
+  Text,
+  Stack,
+  Badge,
+  HStack,
+  Button,
+} from "@chakra-ui/react";
 import type { Hotel } from "../domain/hotel";
-import { Link as RouterLink } from "react-router-dom";
-
-function truncate(s: string, n = 80) {
-  return s.length > n ? s.slice(0, n - 1) + "…" : s;
-}
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
-  const shownAmenities = hotel.amenities.slice(0, 3);
-  const extraCount = Math.max(0, hotel.amenities.length - shownAmenities.length);
+  const nav = useNavigate();
+  const shown = hotel.amenities.slice(0, 3);
+  const extra = Math.max(0, hotel.amenities.length - shown.length);
 
   return (
-    // ✅ Τύλιγμα ΜΕ RouterLink (όχι as=)
-    <RouterLink to={`/hotels/${hotel.id}`}>
-      <Card.Root p={4} _hover={{ shadow: "md" }} cursor="pointer">
-        <Card.Body>
-          <Stack gap={3}>
-            <Heading size="md">{hotel.name}</Heading>
-            {hotel.description && <Text>{truncate(hotel.description, 100)}</Text>}
+    <Card.Root
+      h="full"                                 // 👈 ίσο ύψος
+      p={4}
+      _hover={{ shadow: "md", cursor: "pointer" }}
+      transition="box-shadow 150ms"
+      display="flex"
+      flexDirection="column"
+      onClick={() => nav(`/hotels/${hotel.id}`)}  // 👈 όλη η κάρτα clickable
+      role="link"
+      aria-label={`Open ${hotel.name} details`}
+    >
+      {/* Body: γεμίζει τον χώρο */}
+      <Stack gap={2} flex="1">
+        <Heading size="md">{hotel.name}</Heading>
 
-            <HStack wrap="wrap" gap={2}>
-              {shownAmenities.map((a) => (
-                <Badge key={a}>{a}</Badge>
-              ))}
-              {extraCount > 0 && <Badge>+{extraCount} more</Badge>}
-            </HStack>
+        {hotel.description && (
+          <Text lineClamp={3}>{hotel.description}</Text>  // 👈 max 3 γραμμές
+        )}
 
-            {/* Προαιρετικά κρατάμε και κουμπιά — επίσης τυλιγμένα σε RouterLink */}
-            <HStack gap={3} mt={2} onClick={(e) => e.stopPropagation()}>
-              <RouterLink to={`/hotels/${hotel.id}`}>
-                <Button>View Details</Button>
-              </RouterLink>
-              <RouterLink to={`/hotels/${hotel.id}/edit`}>
-                <Button>Edit</Button>
-              </RouterLink>
-            </HStack>
-          </Stack>
-        </Card.Body>
-      </Card.Root>
-    </RouterLink>
+        {/* σταθερός χώρος για badges για να μη «πηδάνε» τα κουμπιά */}
+        <HStack wrap="wrap" gap={2} minH="36px">
+          {shown.map((a) => (
+            <Badge key={a}>{a}</Badge>
+          ))}
+          {extra > 0 && <Badge>+{extra} more</Badge>}
+        </HStack>
+      </Stack>
+
+      {/* Footer: πάντα στο κάτω μέρος */}
+      <HStack gap={2} pt={4}>
+        <RouterLink to={`/hotels/${hotel.id}`}>
+          <Button
+            bg="black"
+            color="white"
+            _hover={{ bg: "gray.900" }}
+            _active={{ bg: "gray.800" }}
+            onClick={(e) => e.stopPropagation()}  // 👈 να μην ανοίγει η κάρτα
+          >
+            View Details
+          </Button>
+        </RouterLink>
+
+        <RouterLink to={`/hotels/${hotel.id}/edit`}>
+          <Button
+            bg="#D1D0D0"
+            color="black"
+            _hover={{ bg: "#bfbfbf" }}
+            _active={{ bg: "#a6a6a6" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            Edit
+          </Button>
+        </RouterLink>
+      </HStack>
+    </Card.Root>
   );
 }

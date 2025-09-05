@@ -1,5 +1,5 @@
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
-import { Heading, Text, Button, Stack, Badge } from "@chakra-ui/react";
+import { Heading, Text, Button, Stack, HStack, Badge } from "@chakra-ui/react";
 import { useState } from "react";
 import { useHotelQuery } from "../../data-access/useHotelQuery";
 import { useDeleteHotelMutation } from "../../data-access/useDeleteMutation";
@@ -41,14 +41,17 @@ export default function HotelViewPage() {
         ))}
       </Stack>
 
-      <Stack direction="row" gap={3}>
+      <HStack gap={3}>
+        <RouterLink to="/hotels">
+          <Button>Back to List</Button>
+        </RouterLink>
         <RouterLink to={`/hotels/${hotel.id}/edit`}>
           <Button>Edit</Button>
         </RouterLink>
         <Button onClick={() => setOpen(true)} disabled={del.isPending}>
           {del.isPending ? "Deleting…" : "Delete"}
         </Button>
-      </Stack>
+      </HStack>
 
       <DeleteConfirm
         isOpen={open}

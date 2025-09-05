@@ -3,29 +3,36 @@ import HotelForm from "../../../ui/HotelForm";
 import { hotelCreateSchema, type HotelCreateForm } from "../validationSchema/hotelCreateSchema";
 import { useCreateHotelMutation } from "../../../data-access/useCreateMutation";
 import { useNavigate } from "react-router-dom";
+import { useToastify } from "@/lib/useToastify";
 
 export default function HotelCreatePage() {
   const nav = useNavigate();
   const m = useCreateHotelMutation();
+  const t = useToastify();
 
   const onSubmit = async (values: HotelCreateForm) => {
-    const amenities = (values.amenitiesCsv ?? "")
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-    const created = await m.mutateAsync({
-      name: values.name,
-      description: values.description,
-      amenities,
-    });
-
-    nav(`/hotels/${created.id}`);
+    try {
+      const created = await m.mutateAsync({
+        name: values.name,
+        description: values.description,
+        amenities: values.amenities ?? [],
+      });
+      t.ok("Hotel created", created.name);
+      nav(`/hotels/${created.id}`);
+    } catch (e: any) {
+      t.bad("Create failed", e.message);
+    }
   };
 
   return (
     <>
       <Heading mb={4}>Create Hotel</Heading>
-      <HotelForm schema={hotelCreateSchema} onSubmit={onSubmit} />
+      <HotelForm
+        schema={hotelCreateSchema}
+        onSubmit={onSubmit}
+        submitText="Create"
+        amenitiesAsCheckboxes
+      />
     </>
   );
 }

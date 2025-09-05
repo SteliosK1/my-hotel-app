@@ -10,33 +10,20 @@ async function deleteHotel(id: string) {
 
 export const useDeleteHotelMutation = () => {
   const qc = useQueryClient();
-
   return useMutation({
     mutationFn: deleteHotel,
-
-    // Optimistic update: βγάζουμε προσωρινά το item από τη λίστα
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ["hotels"] });
       const prev = qc.getQueryData<Hotel[]>(["hotels"]);
-
-      qc.setQueryData<Hotel[]>(["hotels"], (old) =>
-        (old ?? []).filter((h) => h.id !== id)
-      );
-
+      qc.setQueryData<Hotel[]>(["hotels"], (old) => (old ?? []).filter((h) => h.id !== id));
       return { prev };
     },
-
-    // Αν αποτύχει, κάνε rollback
-    onError: (_err, _id, ctx) => {
-      if (ctx?.prev) qc.setQueryData(["hotels"], ctx.prev);
+    onError: (_e, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["hotels"], ctx.prev); // rollback
     },
-
-    // Καθάρισε το detail από την cache
     onSuccess: (id) => {
       qc.removeQueries({ queryKey: ["hotel", id] });
     },
-
-    // Φρεσκάρισε τη λίστα
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["hotels"] });
     },

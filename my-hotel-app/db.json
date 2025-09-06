@@ -1,0 +1,103 @@
+{
+  "hotels": [
+    {
+      "name": "Seaside Hotel",
+      "description": "Near the beach",
+      "amenities": [
+        "WiFi",
+        "Pool"
+      ],
+      "id": "1"
+    },
+    {
+      "id": "2",
+      "name": "City Center Inn",
+      "description": "Downtown",
+      "amenities": [
+        "WiFi"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Mountain View Lodge",
+      "description": "Cozy stay with panoramic mountain views",
+      "amenities": [
+        "WiFi",
+        "Breakfast",
+        "Parking"
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Airport Express Hotel",
+      "description": "Minutes from the airport with free shuttle",
+      "amenities": [
+        "WiFi",
+        "Shuttle",
+        "24/7 Reception"
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Old Town Boutique",
+      "description": "Charming rooms in the historic center",
+      "amenities": [
+        "WiFi",
+        "Breakfast",
+        "Pet Friendly"
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Lakeside Retreat",
+      "description": "Relax by the lake; ideal for weekend getaways",
+      "amenities": [
+        "WiFi",
+        "Spa",
+        "Parking",
+        "Restaurant"
+      ]
+    },
+    {
+      "id": "7",
+      "name": "Business Hub Hotel",
+      "description": "Perfect for business trips with meeting rooms",
+      "amenities": [
+        "WiFi",
+        "Gym",
+        "Conference Room"
+      ]
+    },
+    {
+      "id": "8",
+      "name": "Sunset Apartments",
+      "description": "Serviced apartments with kitchenettes",
+      "amenities": [
+        "WiFi",
+        "Kitchenette",
+        "Laundry"
+      ]
+    },
+    {
+      "id": "9",
+      "name": "Budget Stay",
+      "description": "Affordable rooms with essential amenities",
+      "amenities": [
+        "WiFi",
+        "Parking"
+      ]
+    },
+    {
+      "id": "10",
+      "name": "Riviera Spa & Resort",
+      "description": "Premium resort with full spa services",
+      "amenities": [
+        "WiFi",
+        "Spa",
+        "Pool",
+        "Restaurant",
+        "Gym"
+      ]
+    }
+  ]
+}

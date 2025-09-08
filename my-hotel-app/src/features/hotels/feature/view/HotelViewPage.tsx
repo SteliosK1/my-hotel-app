@@ -24,7 +24,6 @@ export default function HotelViewPage() {
       nav("/hotels");
     } catch (e: any) {
       t.bad("Delete failed", e.message);
-      // αν θέλεις, refetch για να συγχρονιστεί η σελίδα
       refetch();
     } finally {
       setOpen(false);

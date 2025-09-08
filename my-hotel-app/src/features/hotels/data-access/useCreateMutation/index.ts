@@ -17,7 +17,6 @@ export const useCreateHotelMutation = () => {
       qc.setQueryData<Hotel[]>(["hotels"], (prev) =>
         prev ? [created, ...prev] : [created]
       );
-      // (προαιρετικό) γράψε και το detail
       qc.setQueryData(["hotel", created.id], created);
     },
     onSettled: () => {

@@ -1,4 +1,3 @@
-// src/features/hotels/data-access/useUpdateMutation/index.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { httpClient } from "@/lib/httpClient";
 import type { Hotel } from "../../domain/hotel";

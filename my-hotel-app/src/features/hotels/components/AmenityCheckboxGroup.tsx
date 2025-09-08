@@ -1,4 +1,3 @@
-// src/features/hotels/components/AmenityCheckboxGroup.tsx
 import { Stack, HStack } from "@chakra-ui/react";
 import { AMENITY_OPTIONS, type AmenityOption } from "../constants/amenities";
 

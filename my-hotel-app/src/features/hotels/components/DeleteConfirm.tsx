@@ -1,4 +1,3 @@
-// src/features/hotels/components/DeleteConfirm.tsx
 import { Dialog, Button, Stack } from "@chakra-ui/react";
 
 export default function DeleteConfirm({
@@ -23,9 +22,9 @@ export default function DeleteConfirm({
       <Dialog.Positioner>
         <Dialog.Content maxW="md">
           <Dialog.Header>Delete “{name}”;</Dialog.Header>
-          <Dialog.Description>
-            Are you sure? This action cannot be undone.
-          </Dialog.Description>
+            <Dialog.Description style={{ marginLeft: 25 }}>
+              Are you sure? This action cannot be undone.
+            </Dialog.Description>
           <Dialog.Footer>
             <Stack direction="row" gap={3}>
               <Button onClick={onClose}>Cancel</Button>

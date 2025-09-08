@@ -3,11 +3,13 @@ const hotelService = require('../services/hotelService');
 const { createHotelSchema, updateHotelSchema, hotelIdSchema } = require('../schemas/hotelSchemas');
 
 const router = express.Router();
+const { pagePaginationQuerySchema } = require('../schemas/hotelSchemas');
 
 // Get all hotels
 router.get('/', async (req, res) => {
   try {
-    const hotels = await hotelService.getAllHotels();
+    const pagination = pagePaginationQuerySchema.parse(req.query);
+    const hotels = await hotelService.listHotelsPaged(pagination);
     res.json({ data: hotels, success: true });
   } catch (error) {
     console.error('Error fetching hotels:', error);

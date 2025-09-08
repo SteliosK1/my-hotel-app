@@ -56,6 +56,38 @@ class HotelService {
       where: { id }
     });
   }
+  
+async listHotelsPaged({ page = 1, per_page = 10, order = 'desc' }) {
+  const skip = (page - 1) * per_page;
+  const orderBy = [{ createdAt: order }, { id: order }];
+
+  const [rows, total] = await Promise.all([
+    prisma.hotel.findMany({ skip, take: per_page, orderBy }),
+    prisma.hotel.count(),
+  ]);
+
+  const data = rows.map(transformHotel);
+
+  const totalPages = total === 0 ? 0 : Math.ceil(total / per_page);
+  const hasPrev = page > 1;
+  const hasNext = skip + data.length < total;
+
+  return {
+    data,
+    meta: {
+      page,
+      per_page,
+      total,
+      totalPages,
+      hasPrev,
+      hasNext,
+      prevPage: hasPrev ? page - 1 : null,
+      nextPage: hasNext ? page + 1 : null,
+      order,
+    },
+  };
+}
+
 }
 
 module.exports = new HotelService();

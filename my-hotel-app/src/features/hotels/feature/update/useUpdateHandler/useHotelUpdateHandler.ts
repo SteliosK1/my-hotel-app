@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useUpdateHotelMutation } from "../../../data-access/useUpdateMutation";
 import { useToastify } from "@/lib/useToastify";
-import type { HotelUpdateForm } from "../validationSchema/hotelUpdateSchema";
+import { type HotelFormValues } from "../../../schemas/hotelSchema";
 
 export function useHotelUpdateHandler(id: string) {
   const navigate = useNavigate();
   const mutation = useUpdateHotelMutation();
   const toast = useToastify();
 
-  const onSubmit = async (values: HotelUpdateForm) => {
+  const onSubmit = async (values: HotelFormValues) => {
     try {
       const updated = await mutation.mutateAsync({
         id,

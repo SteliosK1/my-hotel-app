@@ -1,18 +1,10 @@
-import React, { useEffect, useState } from "react";
+// src/features/rooms/ui/RoomForm.tsx
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Heading, HStack, Text } from "@chakra-ui/react";
+import { z } from "zod";
 import type { RoomType } from "../domain/types";
 
-// Εσωτερικό state (επιτρέπει κενά)
-export type FormValues = {
-  hotelId?: string;
-  roomNumber: string;
-  type: RoomType | "";
-  pricePerNight: number;
-  isAvailable: boolean;
-};
-
-// Τι παραδίδουμε στον γονιό (πάντα έγκυρο)
-export type SubmitValues = {
-  hotelId?: string;
+type SubmitValues = {
   roomNumber: string;
   type: RoomType;
   pricePerNight: number;
@@ -22,10 +14,19 @@ export type SubmitValues = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (values: SubmitValues) => void; // <-- αλλάζει εδώ
-  initialValues?: Partial<FormValues>;
+  onSubmit: (values: SubmitValues) => Promise<void> | void;
+  initialValues?: Partial<SubmitValues>;
   title?: string;
 };
+
+const roomFormSchema = z.object({
+  roomNumber: z.string().min(1, "Room number is required"),
+  type: z.enum(["SINGLE", "DOUBLE", "SUITE", "FAMILY"], {
+    required_error: "Type is required",
+  }),
+  pricePerNight: z.coerce.number().positive("Price must be greater than 0"),
+  isAvailable: z.coerce.boolean(),
+});
 
 export default function RoomForm({
   isOpen,
@@ -34,161 +35,188 @@ export default function RoomForm({
   initialValues,
   title = "Add Room",
 }: Props) {
-  const [values, setValues] = useState<FormValues>({
-    roomNumber: "",
-    type: "",
-    pricePerNight: 0,
-    isAvailable: true,
-    ...initialValues,
-  });
+  const [roomNumber, setRoomNumber] = useState(initialValues?.roomNumber ?? "");
+  const [type, setType] = useState<RoomType | "">(
+    (initialValues?.type as RoomType) ?? ""
+  );
+  const [pricePerNight, setPricePerNight] = useState<string | number>(
+    initialValues?.pricePerNight ?? ""
+  );
+  const [isAvailable, setIsAvailable] = useState<boolean>(
+    initialValues?.isAvailable ?? true
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (initialValues) {
-      setValues((v) => ({ ...v, ...initialValues }));
+      setRoomNumber(initialValues.roomNumber ?? "");
+      setType((initialValues.type as RoomType) ?? "");
+      setPricePerNight(initialValues.pricePerNight ?? "");
+      setIsAvailable(initialValues.isAvailable ?? true);
     }
   }, [initialValues]);
 
-  if (!isOpen) return null;
+  const valuesForValidation = useMemo(
+    () => ({
+      roomNumber: String(roomNumber ?? "").trim(),
+      type: (type || "") as RoomType,
+      pricePerNight: pricePerNight === "" ? NaN : Number(pricePerNight),
+      isAvailable: Boolean(isAvailable),
+    }),
+    [roomNumber, type, pricePerNight, isAvailable]
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // απλή validation
-    if (!values.roomNumber || !values.type) {
-      alert("Room number & Type are required");
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const parsed = roomFormSchema.safeParse(valuesForValidation);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      parsed.error.issues.forEach((iss) => {
+        const key = iss.path.join(".") || "form";
+        if (!fieldErrors[key]) fieldErrors[key] = iss.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
-    // Μετατροπή σε SubmitValues (type σίγουρα RoomType)
-    const out: SubmitValues = {
-      hotelId: values.hotelId,
-      roomNumber: String(values.roomNumber).trim(),
-      type: values.type as RoomType,
-      pricePerNight: Number(values.pricePerNight || 0),
-      isAvailable: Boolean(values.isAvailable),
-    };
-    onSubmit(out);
+    setErrors({});
+    try {
+      setSaving(true);
+      await onSubmit(parsed.data);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   };
 
+  if (!isOpen) return null;
 
-  // Inline panel με native στοιχεία για πλήρη συμβατότητα
   return (
-    <div
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-        padding: 16,
-        marginTop: 16,
-        background: "#fff",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
+    <>
+      <Box
+        position="fixed"
+        inset={0}
+        bg="blackAlpha.500"
+        zIndex={1000}
+        onClick={onClose}
+      />
+      <Box
+        as="form"
+        onSubmit={handleSubmit}
+        position="fixed"
+        zIndex={1001}
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        bg="white"
+        borderWidth="1px"
+        rounded="lg"
+        p={5}
+        w="90%"
+        maxW="520px"
+        shadow="lg"
       >
-        <h3 style={{ margin: 0 }}>{title}</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#f8fafc" }}
-        >
-          Close
-        </button>
-      </div>
+        <Heading size="md" mb={4}>
+          {title}
+        </Heading>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         {/* Room Number */}
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Room Number *</span>
+        <Box mb={3}>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+            Room Number
+          </label>
           <input
-            value={values.roomNumber}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setValues({ ...values, roomNumber: e.target.value })
-            }
-            placeholder="e.g. 101"
-            required
+            value={roomNumber}
+            placeholder="e.g. 101 or 202A"
+            onChange={(e) => setRoomNumber(e.target.value)}
             style={{
+              width: "100%",
+              border: "1px solid var(--chakra-colors-gray-300)",
+              borderRadius: 8,
               padding: "8px 10px",
-              borderRadius: 6,
-              border: "1px solid #cbd5e1",
             }}
           />
-        </label>
+          {errors.roomNumber && (
+            <Text mt={1} color="red.500" fontSize="sm">
+              {errors.roomNumber}
+            </Text>
+          )}
+        </Box>
 
         {/* Type */}
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Type *</span>
+        <Box mb={3}>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+            Type
+          </label>
           <select
-            value={values.type}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              setValues({ ...values, type: e.target.value as RoomType })
-            }
-            required
+            value={type}
+            onChange={(e) => setType((e.target.value as RoomType) || "")}
             style={{
+              width: "100%",
+              border: "1px solid var(--chakra-colors-gray-300)",
+              borderRadius: 8,
               padding: "8px 10px",
-              borderRadius: 6,
-              border: "1px solid #cbd5e1",
-              background: "#fff",
+              background: "white",
             }}
           >
-            <option value="">Select type</option>
+            <option value="">Select type…</option>
             <option value="SINGLE">Single</option>
             <option value="DOUBLE">Double</option>
             <option value="SUITE">Suite</option>
             <option value="FAMILY">Family</option>
           </select>
-        </label>
+          {errors.type && (
+            <Text mt={1} color="red.500" fontSize="sm">
+              {errors.type}
+            </Text>
+          )}
+        </Box>
 
         {/* Price */}
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Price per night (€) *</span>
+        <Box mb={3}>
+          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+            Price per Night
+          </label>
           <input
             type="number"
-            min={0}
-            value={values.pricePerNight}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setValues({ ...values, pricePerNight: Number(e.target.value || 0) })
-            }
-            required
+            value={pricePerNight}
+            placeholder="e.g. 120"
+            onChange={(e) => setPricePerNight(e.target.value)}
             style={{
+              width: "100%",
+              border: "1px solid var(--chakra-colors-gray-300)",
+              borderRadius: 8,
               padding: "8px 10px",
-              borderRadius: 6,
-              border: "1px solid #cbd5e1",
             }}
           />
-        </label>
+          {errors.pricePerNight && (
+            <Text mt={1} color="red.500" fontSize="sm">
+              {errors.pricePerNight}
+            </Text>
+          )}
+        </Box>
 
-        {/* Availability */}
-        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type="checkbox"
-            checked={!!values.isAvailable}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setValues({ ...values, isAvailable: e.target.checked })
-            }
-          />
-          <span>Available</span>
-        </label>
+        {/* Available */}
+        <Box mb={3}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="checkbox"
+              checked={isAvailable}
+              onChange={(e) => setIsAvailable(e.target.checked)}
+            />
+            <span>Available</span>
+          </label>
+        </Box>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ padding: "8px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#f8fafc" }}
-          >
+        <HStack justify="flex-end" mt={6} gap={3}>
+          <Button variant="outline" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            style={{ padding: "8px 12px", borderRadius: 6, background: "#1a202c", color: "#fff", border: "none" }}
-          >
+          </Button>
+          <Button colorScheme="blue" type="submit" loading={saving}>
             Save
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </HStack>
+      </Box>
+    </>
   );
 }

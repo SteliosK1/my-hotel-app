@@ -27,41 +27,75 @@ export default function RoomCard({ room, onEdit, onDelete }: Props) {
   };
 
   return (
-    <Box borderWidth="1px" rounded="lg" p={4} position="relative">
-      <Flex align="center" gap={3}>
-        <Heading size="sm">
+    <Box
+      borderWidth="1px"
+      rounded="lg"
+      p={4}
+      shadow="sm"
+      _hover={{ shadow: "md" }}
+      h="100%"
+      display="flex"
+      flexDir="column"
+      gap={2}
+    >
+      {/* Header */}
+      <Flex align="center" gap={3} minH="28px" minW={0}>
+        {/* minW={0} για να λειτουργήσει το truncation */}
+        <Heading
+          size="sm"
+          truncate
+          maxW="100%"
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
           #{room.roomNumber} — {room.type}
         </Heading>
-        <Badge colorPalette={room.isAvailable ? "green" : "red"}>
+
+        <Badge colorPalette={room.isAvailable ? "green" : "red"} flexShrink={0}>
           {room.isAvailable ? "Available" : "Unavailable"}
         </Badge>
+
         <Spacer />
-        <HStack>
+
+        <HStack gap={2} flexWrap="wrap">
           {onEdit && (
             <Button size="sm" onClick={() => onEdit(room)}>
               Edit
             </Button>
           )}
           {onDelete && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setConfirmOpen(true)}
-            >
+            <Button size="sm" variant="outline" onClick={() => setConfirmOpen(true)}>
               Delete
             </Button>
           )}
         </HStack>
       </Flex>
 
-      <Text mt={2} fontWeight="medium">
-        €{room.pricePerNight} / night
-      </Text>
-      <Text mt={1} color="gray.500">
-        {room.hotel?.name ?? room.hotelId}
-      </Text>
+      {/* Body */}
+      <Box flex="1 1 auto" mt={1} minW={0}>
+        <Text
+          fontWeight="medium"
+          truncate
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
+          €{room.pricePerNight} / night
+        </Text>
+        <Text
+          mt={1}
+          color="gray.500"
+          truncate
+          overflow="hidden"
+          textOverflow="ellipsis"
+          whiteSpace="nowrap"
+        >
+          {room.hotel?.name ?? room.hotelId}
+        </Text>
+      </Box>
 
-      {/* Lightweight confirm overlay (χωρίς AlertDialog/Dialog) */}
+      {/* Lightweight confirm overlay */}
       {confirmOpen && (
         <>
           {/* Backdrop */}
@@ -91,8 +125,8 @@ export default function RoomCard({ room, onEdit, onDelete }: Props) {
               Delete Room
             </Heading>
             <Text mb={4}>
-              Are you sure you want to delete room <b>{room.roomNumber}</b>? This
-              action cannot be undone.
+              Are you sure you want to delete room <b>{room.roomNumber}</b>? This action
+              cannot be undone.
             </Text>
 
             <HStack justify="flex-end" gap={3}>

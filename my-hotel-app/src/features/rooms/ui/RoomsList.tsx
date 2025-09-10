@@ -135,7 +135,7 @@ const visibleRooms = useMemo(() => {
       {error && <Box color="red.500">{(error as Error).message}</Box>}
 
       {!isLoading && !error && (
-        <Grid templateColumns="repeat(auto-fill, minmax(260px, 1fr))" gap={4}>
+        <Grid templateColumns="repeat(auto-fill, minmax(350px, 1fr))" gap={6} alignItems="stretch">
           {visibleRooms.map((r) => (
             <GridItem key={r.id}>
               <RoomCard room={r} onEdit={(room) => setEditing(room)} onDelete={onDelete} />

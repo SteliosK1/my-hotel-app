@@ -1,10 +1,13 @@
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
-import { Heading, Text, Button, Stack, HStack, Badge } from "@chakra-ui/react";
+import { Heading, Text, Button, Stack, HStack, Badge, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { useHotelQuery } from "../../data-access/useHotelQuery";
 import { useDeleteHotelMutation } from "../../data-access/useDeleteMutation";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import { useToastify } from "@/lib/useToastify";
+// +++ Προσθέτεις/διορθώνεις αυτά τα imports
+import RoomsList from "@/features/rooms/ui/RoomsList"; // έλεγξε ότι αυτό το path υπάρχει
+
 
 export default function HotelViewPage() {
   const { id = "" } = useParams();
@@ -13,6 +16,7 @@ export default function HotelViewPage() {
   const del = useDeleteHotelMutation();
   const t = useToastify();
   const [open, setOpen] = useState(false);
+  const hotelId = id; // ή hotel?.id αν ήδη έχεις το hotel από αλλού
 
   if (isLoading) return <Text>Loading…</Text>;
   if (isError || !hotel) return <Text>Not found</Text>;
@@ -58,6 +62,11 @@ export default function HotelViewPage() {
         onConfirm={handleDelete}
         name={hotel.name}
       />
+      <VStack align="stretch" gap={6}>
+        <Heading size="lg">Hotel details</Heading>
+        {hotelId && <RoomsList hotelId={hotelId} />}   {/* <--- ΤΩΡΑ γνωρίζει RoomsList & hotelId */}
+      </VStack>
+
     </Stack>
   );
 }

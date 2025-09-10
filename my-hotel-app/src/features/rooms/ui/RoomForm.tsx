@@ -16,9 +16,15 @@ type Props = {
   onClose: () => void;
   onSubmit: (values: SubmitValues) => Promise<void> | void;
   initialValues?: Partial<SubmitValues>;
+  /** "create" (default) ή "edit" */
+  mode?: "create" | "edit";
+  /** override τίτλου αν θες */
   title?: string;
+  /** override κειμένου κουμπιού αν θες */
+  submitLabel?: string;
 };
 
+// Zod schema (coerce number για να δέχεται string από input)
 const roomFormSchema = z.object({
   roomNumber: z.string().min(1, "Room number is required"),
   type: z.enum(["SINGLE", "DOUBLE", "SUITE", "FAMILY"], {
@@ -33,8 +39,13 @@ export default function RoomForm({
   onClose,
   onSubmit,
   initialValues,
-  title = "Add Room",
+  mode = "create",
+  title,
+  submitLabel,
 }: Props) {
+  const computedTitle = title ?? (mode === "edit" ? "Edit Room" : "Add Room");
+  const computedSubmit = submitLabel ?? (mode === "edit" ? "Save changes" : "Create room");
+
   const [roomNumber, setRoomNumber] = useState(initialValues?.roomNumber ?? "");
   const [type, setType] = useState<RoomType | "">(
     (initialValues?.type as RoomType) ?? ""
@@ -54,8 +65,13 @@ export default function RoomForm({
       setType((initialValues.type as RoomType) ?? "");
       setPricePerNight(initialValues.pricePerNight ?? "");
       setIsAvailable(initialValues.isAvailable ?? true);
+    } else if (mode === "create") {
+      // προαιρετικά defaults για create
+      setType("");
+      setPricePerNight("");
+      setIsAvailable(true);
     }
-  }, [initialValues]);
+  }, [initialValues, mode]);
 
   const valuesForValidation = useMemo(
     () => ({
@@ -72,10 +88,10 @@ export default function RoomForm({
     const parsed = roomFormSchema.safeParse(valuesForValidation);
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
-      parsed.error.issues.forEach((iss) => {
+      for (const iss of parsed.error.issues) {
         const key = iss.path.join(".") || "form";
         if (!fieldErrors[key]) fieldErrors[key] = iss.message;
-      });
+      }
       setErrors(fieldErrors);
       return;
     }
@@ -93,6 +109,7 @@ export default function RoomForm({
 
   return (
     <>
+      {/* Backdrop */}
       <Box
         position="fixed"
         inset={0}
@@ -100,6 +117,7 @@ export default function RoomForm({
         zIndex={1000}
         onClick={onClose}
       />
+      {/* Panel */}
       <Box
         as="form"
         onSubmit={handleSubmit}
@@ -117,7 +135,7 @@ export default function RoomForm({
         shadow="lg"
       >
         <Heading size="md" mb={4}>
-          {title}
+          {computedTitle}
         </Heading>
 
         {/* Room Number */}
@@ -127,7 +145,7 @@ export default function RoomForm({
           </label>
           <input
             value={roomNumber}
-            placeholder="e.g. 101 or 202A"
+            placeholder="e.g. 101"
             onChange={(e) => setRoomNumber(e.target.value)}
             style={{
               width: "100%",
@@ -208,12 +226,13 @@ export default function RoomForm({
           </label>
         </Box>
 
+        {/* Actions */}
         <HStack justify="flex-end" mt={6} gap={3}>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button colorScheme="blue" type="submit" loading={saving}>
-            Save
+            {computedSubmit}
           </Button>
         </HStack>
       </Box>

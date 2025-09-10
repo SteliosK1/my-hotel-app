@@ -157,7 +157,6 @@ const visibleRooms = useMemo(() => {
           isOpen={!!editing}
           onClose={() => setEditing(null)}
           initialValues={{
-            hotelId: editing.hotelId,
             roomNumber: editing.roomNumber,
             type: editing.type,
             pricePerNight: editing.pricePerNight,

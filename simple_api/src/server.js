@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const hotelRoutes = require('./routes/hotels');
+const roomRoutes = require('./routes/rooms');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,12 +27,14 @@ app.get('/', (req, res) => {
     message: 'Simple Hotel API', 
     version: '1.0.0',
     endpoints: {
-      hotels: '/api/hotels'
+      hotels: '/api/hotels',
+      rooms: '/api/rooms'
     }
   });
 });
 
 app.use('/api/hotels', hotelRoutes);
+app.use('/api/rooms', roomRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

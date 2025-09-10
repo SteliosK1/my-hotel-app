@@ -17,6 +17,47 @@ model Hotel {
   amenities   String   // JSON string for array of amenities
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  // Relationship: A hotel has many rooms
+  rooms       Room[]
 
   @@map("hotels")
+}
+
+model Room {
+  id             String   @id @default(cuid())
+  hotelId        String   // Foreign key to Hotel
+  roomNumber     String
+  type           String   // SINGLE, DOUBLE, SUITE, FAMILY
+  pricePerNight  Float
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relationship: A room belongs to one hotel
+  hotel          Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  
+  // Relationship: A room can have many bookings
+  bookings       Booking[]
+  
+  @@unique([hotelId, roomNumber]) // Prevent duplicate room numbers within the same hotel
+  @@map("rooms")
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  roomId       String   // Foreign key to Room
+  guestName    String
+  guestEmail   String
+  checkIn      DateTime
+  checkOut     DateTime
+  totalPrice   Float
+  status       String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relationship: A booking belongs to one room
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@map("bookings")
 }

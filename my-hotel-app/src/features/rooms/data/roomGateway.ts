@@ -5,8 +5,6 @@ export type RoomsFilters = {
   hotelId?: string;
   type?: RoomType;
   isAvailable?: boolean;
-  minPrice?: number;
-  maxPrice?: number;
 };
 
 export async function fetchRooms(filters: RoomsFilters): Promise<Room[]> {

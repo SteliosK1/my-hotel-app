@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { Box, Grid, GridItem, Heading, HStack, Button } from "@chakra-ui/react";
-import RoomCard from "./RoomCard";
-import RoomForm from "./RoomForm";
-import { useRoomsQuery } from "../data/useRoomsQuery";
-import { useCreateRoom, useUpdateRoom, useDeleteRoom } from "../data/useRoomMutations";
-import type { Room, RoomType } from "../domain/types";
+import RoomCard from "../../../components/RoomCard";
+import RoomForm from "../../../ui/RoomForm";
+import { useRoomsQuery } from "../../../data-access/useRoomQuery/useRoomsQuery";
+import { useCreateRoom, useUpdateRoom, useDeleteRoom } from "../../../data-access/mutation/useRoomMutations";
+import type { Room, RoomType } from "../../../domain/types";
 
 type Props = { hotelId: string };
 
@@ -25,11 +25,11 @@ export default function RoomsList({ hotelId }: Props) {
   }, [hotelId, type]);
 
   // Fetch
-  const { data: rooms = [], isLoading, error } = useRoomsQuery(filters);
+  const { data: rooms = [] as Room[], isLoading, error } = useRoomsQuery(filters);
 
 // Client-side availability + sorting by roomNumber (ascending, natural)
 const visibleRooms = useMemo(() => {
-  const base = availableOnly ? rooms.filter((r) => r.isAvailable === true) : rooms;
+  const base = availableOnly ? rooms.filter((r: Room) => r.isAvailable === true) : rooms;
   return [...base].sort((a, b) =>
     a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true, sensitivity: "base" })
   );

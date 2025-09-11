@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchRooms } from "./roomGateway";
-import type { RoomsFilters } from "./roomGateway";
+import { fetchRooms } from "../gateway/roomGateway.ts";
+import type { RoomsFilters } from "../gateway/roomGateway.ts";
 
 export const useRoomsQuery = (filters: RoomsFilters) =>
   useQuery({

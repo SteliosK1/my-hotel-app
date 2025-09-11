@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import type { Room, RoomsListResponse, RoomItemResponse, RoomType } from "../domain/types";
+import type { Room, RoomsListResponse, RoomItemResponse, RoomType } from "../../domain/types";
 
 export type RoomsFilters = {
   hotelId?: string;

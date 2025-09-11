@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createRoom, updateRoom, deleteRoom } from "./roomGateway";
-import type { RoomType } from "../domain/types";
+import { createRoom, updateRoom, deleteRoom } from "../gateway/roomGateway";
+import type { RoomType } from "../../domain/types";
 import { useToastify } from "@/lib/useToastify"; // δικό σου hook
 
 // -----------------------------

@@ -5,8 +5,7 @@ import { useHotelQuery } from "../../data-access/useHotelQuery";
 import { useDeleteHotelMutation } from "../../data-access/useDeleteMutation";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import { useToastify } from "@/lib/useToastify";
-// +++ Προσθέτεις/διορθώνεις αυτά τα imports
-import RoomsList from "@/features/rooms/ui/RoomsList"; // έλεγξε ότι αυτό το path υπάρχει
+import RoomsList from "@/features/rooms/feature/list/list-rooms/RoomsList"; // έλεγξε ότι αυτό το path υπάρχει
 
 
 export default function HotelViewPage() {

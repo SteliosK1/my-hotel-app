@@ -1,95 +1,41 @@
+import { Box, Heading, HStack, Spinner, Text, Stack } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
-import {
-  Box,
-  Grid,
-  GridItem,
-  Heading,
-  HStack,
-  Button,
-  Select,
-  Checkbox,
-  Spinner,
-  Text,
-  Stack,
-  Portal,
-  createListCollection,
-} from "@chakra-ui/react";
-
-import RoomCard from "../../../components/RoomCard";
+import RoomsFilters from "../components/RoomsFilters";
+import RoomsGrid from "../components/RoomsGrid";
+import RoomActions from "../components/RoomActions";
 import RoomForm from "../../../ui/RoomForm";
 import { useRoomsQuery } from "../../../data-access/useRoomQuery/useRoomsQuery";
-import {
-  useCreateRoom,
-  useUpdateRoom,
-  useDeleteRoom,
-} from "../../../data-access/mutation/useRoomMutations";
+import { useCreateRoom, useUpdateRoom, useDeleteRoom } from "../../../data-access/mutation/useRoomMutations";
 import type { Room, RoomType } from "../../../domain/types";
 
 type Props = { hotelId: string };
 
 export default function RoomsList({ hotelId }: Props) {
-  // Filters
   const [type, setType] = useState<RoomType | "">("");
   const [availableOnly, setAvailableOnly] = useState<boolean>(false);
-
-  // Build Select collection for Chakra v3
-  const roomTypeCollection = useMemo(
-    () =>
-      createListCollection({
-        items: [
-          { label: "All", value: "" },
-          { label: "Single", value: "SINGLE" },
-          { label: "Double", value: "DOUBLE" },
-          { label: "Suite", value: "SUITE" },
-          { label: "Family", value: "FAMILY" },
-        ],
-      }),
-    []
-  );
-
-  // UI state
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
 
-  // Server-side filters (isAvailable φιλτράρεται client-side)
   const filters = useMemo(() => {
     const f: Record<string, unknown> = { hotelId };
     if (type) f.type = type;
     return f;
   }, [hotelId, type]);
 
-  // Fetch
-  const {
-    data: rooms = [] as Room[],
-    isLoading,
-    error,
-  } = useRoomsQuery(filters);
+  const { data: rooms = [], isLoading, error } = useRoomsQuery(filters);
 
-  // Client-side availability + natural sort by roomNumber
   const visibleRooms = useMemo(() => {
-    const base = availableOnly
-      ? rooms.filter((r: Room) => r.isAvailable === true)
-      : rooms;
+    const base = availableOnly ? rooms.filter((r) => r.isAvailable) : rooms;
     return [...base].sort((a, b) =>
-      a.roomNumber.localeCompare(b.roomNumber, undefined, {
-        numeric: true,
-        sensitivity: "base",
-      })
+      a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true, sensitivity: "base" })
     );
   }, [rooms, availableOnly]);
 
-  // Mutations
   const createM = useCreateRoom(hotelId);
   const updateM = useUpdateRoom(hotelId);
   const deleteM = useDeleteRoom(hotelId);
 
-  // Handlers
-  const onCreate = async (values: {
-    roomNumber: string;
-    type: RoomType;
-    pricePerNight: number | string;
-    isAvailable: boolean;
-  }) => {
+  const onCreate = async (values: { roomNumber: string; type: RoomType; pricePerNight: number | string; isAvailable: boolean }) => {
     try {
       await createM.mutateAsync({
         hotelId,
@@ -102,15 +48,7 @@ export default function RoomsList({ hotelId }: Props) {
     } catch {}
   };
 
-  const onUpdate = async (
-    id: string,
-    values: {
-      roomNumber: string;
-      type: RoomType;
-      pricePerNight: number | string;
-      isAvailable: boolean;
-    }
-  ) => {
+  const onUpdate = async (id: string, values: { roomNumber: string; type: RoomType; pricePerNight: number | string; isAvailable: boolean }) => {
     try {
       await updateM.mutateAsync({
         id,
@@ -132,63 +70,18 @@ export default function RoomsList({ hotelId }: Props) {
     } catch {}
   };
 
-  // UI
   return (
     <Box>
       <HStack justify="space-between" mb={4} flexWrap="wrap" gap={6} align="center">
         <Heading size="md">Rooms</Heading>
-
         <HStack gap={6} align="center">
-          {/* Type filter (Chakra v3 Select) */}
-          <Select.Root
-            collection={roomTypeCollection}
-            value={type ? [type] : []}
-            onValueChange={({ value }) => {
-              const next = (value?.[0] ?? "") as RoomType | "";
-              setType(next);
-            }}
-            size="sm"
-            width="220px"
-          >
-            <Select.HiddenSelect />
-            <Select.Label>Type</Select.Label>
-            <Select.Control>
-              <Select.Trigger>
-                <Select.ValueText placeholder="All" />
-              </Select.Trigger>
-              <Select.IndicatorGroup>
-                <Select.Indicator />
-              </Select.IndicatorGroup>
-            </Select.Control>
-            <Portal>
-              <Select.Positioner>
-                <Select.Content>
-                  {roomTypeCollection.items.map(
-                    (it: { label: string; value: string }) => (
-                      <Select.Item item={it} key={it.value}>
-                        {it.label}
-                        <Select.ItemIndicator />
-                      </Select.Item>
-                    )
-                  )}
-                </Select.Content>
-              </Select.Positioner>
-            </Portal>
-          </Select.Root>
-
-          {/* Available only (client-side) - Chakra v3 Checkbox */}
-          <Checkbox.Root
-            checked={availableOnly}
-            onCheckedChange={({ checked }) => setAvailableOnly(!!checked)}
-          >
-            <Checkbox.HiddenInput />
-            <Checkbox.Control />
-            <Checkbox.Label>Available only</Checkbox.Label>
-          </Checkbox.Root>
-
-          <Button onClick={() => setModalOpen(true)} colorScheme="blue">
-            Add Room
-          </Button>
+          <RoomsFilters
+            type={type}
+            availableOnly={availableOnly}
+            onTypeChange={setType}
+            onAvailableOnlyChange={setAvailableOnly}
+          />
+          <RoomActions onAddRoom={() => setModalOpen(true)} />
         </HStack>
       </HStack>
 
@@ -202,19 +95,11 @@ export default function RoomsList({ hotelId }: Props) {
       {error && <Text color="red.500">{(error as Error).message}</Text>}
 
       {!isLoading && !error && (
-        <Grid templateColumns="repeat(auto-fill, minmax(350px, 1fr))" gap={6} alignItems="stretch">
-          {visibleRooms.map((r: Room) => (
-            <GridItem key={r.id}>
-              <RoomCard room={r} onEdit={(room) => setEditing(room)} onDelete={onDelete} />
-            </GridItem>
-          ))}
-        </Grid>
+        <RoomsGrid rooms={visibleRooms} onEdit={setEditing} onDelete={onDelete} />
       )}
 
-      {/* Create */}
       <RoomForm isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={onCreate} />
 
-      {/* Edit */}
       {editing && (
         <RoomForm
           isOpen={!!editing}

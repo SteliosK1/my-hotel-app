@@ -1,12 +1,29 @@
-// src/features/rooms/ui/RoomForm.tsx
-import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Heading, HStack, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Field,
+  Input,
+  Select,
+  Checkbox,
+  Portal,
+  createListCollection,
+} from "@chakra-ui/react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { z } from "zod";
 import type { RoomType } from "../domain/types";
 
+// ---------------- Types ----------------
 type SubmitValues = {
   roomNumber: string;
-  type: RoomType;
+  type: "SINGLE" | "DOUBLE" | "SUITE" | "FAMILY";
   pricePerNight: number;
   isAvailable: boolean;
 };
@@ -16,15 +33,12 @@ type Props = {
   onClose: () => void;
   onSubmit: (values: SubmitValues) => Promise<void> | void;
   initialValues?: Partial<SubmitValues>;
-  /** "create" (default) ή "edit" */
   mode?: "create" | "edit";
-  /** override τίτλου αν θες */
   title?: string;
-  /** override κειμένου κουμπιού αν θες */
   submitLabel?: string;
 };
 
-// Zod schema (coerce number για να δέχεται string από input)
+// ---------------- Schema ----------------
 const roomFormSchema = z.object({
   roomNumber: z.string().min(1, "Room number is required"),
   type: z.enum(["SINGLE", "DOUBLE", "SUITE", "FAMILY"], {
@@ -34,6 +48,7 @@ const roomFormSchema = z.object({
   isAvailable: z.coerce.boolean(),
 });
 
+// ---------------- Component ----------------
 export default function RoomForm({
   isOpen,
   onClose,
@@ -44,9 +59,13 @@ export default function RoomForm({
   submitLabel,
 }: Props) {
   const computedTitle = title ?? (mode === "edit" ? "Edit Room" : "Add Room");
-  const computedSubmit = submitLabel ?? (mode === "edit" ? "Save changes" : "Create room");
+  const computedSubmit =
+    submitLabel ?? (mode === "edit" ? "Save changes" : "Create room");
 
-  const [roomNumber, setRoomNumber] = useState(initialValues?.roomNumber ?? "");
+  // form state
+  const [roomNumber, setRoomNumber] = useState<string>(
+    initialValues?.roomNumber ?? ""
+  );
   const [type, setType] = useState<RoomType | "">(
     (initialValues?.type as RoomType) ?? ""
   );
@@ -59,6 +78,21 @@ export default function RoomForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  // v3 Select collection
+  const roomTypeCollection = useMemo(
+    () =>
+      createListCollection({
+        items: [
+          { label: "Single", value: "SINGLE" },
+          { label: "Double", value: "DOUBLE" },
+          { label: "Suite", value: "SUITE" },
+          { label: "Family", value: "FAMILY" },
+        ],
+      }),
+    []
+  );
+
+  // hydrate on prop changes
   useEffect(() => {
     if (initialValues) {
       setRoomNumber(initialValues.roomNumber ?? "");
@@ -66,30 +100,25 @@ export default function RoomForm({
       setPricePerNight(initialValues.pricePerNight ?? "");
       setIsAvailable(initialValues.isAvailable ?? true);
     } else if (mode === "create") {
-      // προαιρετικά defaults για create
       setType("");
       setPricePerNight("");
       setIsAvailable(true);
     }
   }, [initialValues, mode]);
 
-  const valuesForValidation = useMemo(
-    () => ({
+  // submit
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const parsed = roomFormSchema.safeParse({
       roomNumber: String(roomNumber ?? "").trim(),
       type: (type || "") as RoomType,
       pricePerNight: pricePerNight === "" ? NaN : Number(pricePerNight),
       isAvailable: Boolean(isAvailable),
-    }),
-    [roomNumber, type, pricePerNight, isAvailable]
-  );
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const parsed = roomFormSchema.safeParse(valuesForValidation);
+    });
     if (!parsed.success) {
       const fieldErrors: Record<string, string> = {};
       for (const iss of parsed.error.issues) {
-        const key = iss.path.join(".") || "form";
+        const key = (iss.path.join(".") || "form") as keyof SubmitValues | "form";
         if (!fieldErrors[key]) fieldErrors[key] = iss.message;
       }
       setErrors(fieldErrors);
@@ -117,125 +146,127 @@ export default function RoomForm({
         zIndex={1000}
         onClick={onClose}
       />
+
       {/* Panel */}
-      <Box
-        as="form"
+      <form
         onSubmit={handleSubmit}
-        position="fixed"
-        zIndex={1001}
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        bg="white"
-        borderWidth="1px"
-        rounded="lg"
-        p={5}
-        w="90%"
-        maxW="520px"
-        shadow="lg"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-form-title"
+        style={{
+          position: "fixed",
+          zIndex: 1001,
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          background: "white",
+          border: "1px solid var(--chakra-colors-gray-200)",
+          borderRadius: 12,
+          padding: 20,
+          width: "90%",
+          maxWidth: 520,
+          boxShadow: "var(--chakra-shadows-lg)",
+        }}
       >
-        <Heading size="md" mb={4}>
+        <Heading id="room-form-title" size="md" style={{ marginBottom: 16 }}>
           {computedTitle}
         </Heading>
 
         {/* Room Number */}
-        <Box mb={3}>
-          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
-            Room Number
-          </label>
-          <input
+        <Field.Root invalid={!!errors.roomNumber} required>
+          <Field.Label>Room Number</Field.Label>
+          <Input
             value={roomNumber}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setRoomNumber(e.target.value)
+            }
             placeholder="e.g. 101"
-            onChange={(e) => setRoomNumber(e.target.value)}
-            style={{
-              width: "100%",
-              border: "1px solid var(--chakra-colors-gray-300)",
-              borderRadius: 8,
-              padding: "8px 10px",
-            }}
           />
           {errors.roomNumber && (
-            <Text mt={1} color="red.500" fontSize="sm">
-              {errors.roomNumber}
-            </Text>
+            <Field.ErrorText>{errors.roomNumber}</Field.ErrorText>
           )}
-        </Box>
+        </Field.Root>
 
         {/* Type */}
-        <Box mb={3}>
-          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
-            Type
-          </label>
-          <select
-            value={type}
-            onChange={(e) => setType((e.target.value as RoomType) || "")}
-            style={{
-              width: "100%",
-              border: "1px solid var(--chakra-colors-gray-300)",
-              borderRadius: 8,
-              padding: "8px 10px",
-              background: "white",
+        <Field.Root invalid={!!errors.type} required style={{ marginTop: 12 }}>
+          <Field.Label>Type</Field.Label>
+          <Select.Root
+            collection={roomTypeCollection}
+            value={type ? [type] : []}
+            onValueChange={({ value }) => {
+              const next = (value?.[0] ?? "") as RoomType | "";
+              setType(next);
             }}
           >
-            <option value="">Select type…</option>
-            <option value="SINGLE">Single</option>
-            <option value="DOUBLE">Double</option>
-            <option value="SUITE">Suite</option>
-            <option value="FAMILY">Family</option>
-          </select>
-          {errors.type && (
-            <Text mt={1} color="red.500" fontSize="sm">
-              {errors.type}
-            </Text>
-          )}
-        </Box>
+            <Select.HiddenSelect />
+            <Select.Control>
+              <Select.Trigger>
+                <Select.ValueText placeholder="Select type…" />
+              </Select.Trigger>
+              <Select.Indicator />
+            </Select.Control>
+            <Portal>
+              <Select.Positioner>
+                <Select.Content>
+                  {roomTypeCollection.items.map(
+                    (it: { label: string; value: string }) => (
+                      <Select.Item item={it} key={it.value}>
+                        {it.label}
+                        <Select.ItemIndicator />
+                      </Select.Item>
+                    )
+                  )}
+                </Select.Content>
+              </Select.Positioner>
+            </Portal>
+          </Select.Root>
+          {errors.type && <Field.ErrorText>{errors.type}</Field.ErrorText>}
+        </Field.Root>
 
         {/* Price */}
-        <Box mb={3}>
-          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
-            Price per Night
-          </label>
-          <input
+        <Field.Root
+          invalid={!!errors.pricePerNight}
+          required
+          style={{ marginTop: 12 }}
+        >
+          <Field.Label>Price per Night</Field.Label>
+          <Input
             type="number"
+            inputMode="decimal"
             value={pricePerNight}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setPricePerNight(e.target.value)
+            }
             placeholder="e.g. 120"
-            onChange={(e) => setPricePerNight(e.target.value)}
-            style={{
-              width: "100%",
-              border: "1px solid var(--chakra-colors-gray-300)",
-              borderRadius: 8,
-              padding: "8px 10px",
-            }}
           />
           {errors.pricePerNight && (
-            <Text mt={1} color="red.500" fontSize="sm">
-              {errors.pricePerNight}
-            </Text>
+            <Field.ErrorText>{errors.pricePerNight}</Field.ErrorText>
           )}
-        </Box>
+        </Field.Root>
 
         {/* Available */}
-        <Box mb={3}>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              checked={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.checked)}
-            />
-            <span>Available</span>
-          </label>
-        </Box>
+        <Field.Root style={{ marginTop: 12 }}>
+          <Checkbox.Root
+            checked={isAvailable}
+            onCheckedChange={({ checked }) => setIsAvailable(!!checked)}
+          >
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <Checkbox.Label>Available</Checkbox.Label>
+          </Checkbox.Root>
+        </Field.Root>
 
         {/* Actions */}
         <HStack justify="flex-end" mt={6} gap={3}>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
+          {/* NOTE: στο δικό σου setup το prop είναι `loading`, όχι `isLoading` */}
           <Button colorScheme="blue" type="submit" loading={saving}>
             {computedSubmit}
           </Button>
         </HStack>
-      </Box>
+      </form>
     </>
   );
 }

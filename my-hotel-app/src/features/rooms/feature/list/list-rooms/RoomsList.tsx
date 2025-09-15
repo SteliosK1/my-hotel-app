@@ -136,7 +136,7 @@ export default function RoomsList({ hotelId }: Props) {
   return (
     <Box>
       <HStack justify="space-between" mb={4} flexWrap="wrap" gap={6} align="center">
-        <Heading size="sm">Rooms</Heading>
+        <Heading size="md">Rooms</Heading>
 
         <HStack gap={6} align="center">
           {/* Type filter (Chakra v3 Select) */}

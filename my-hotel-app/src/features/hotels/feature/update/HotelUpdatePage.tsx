@@ -1,4 +1,6 @@
-import { Heading } from "@chakra-ui/react";
+// src/features/hotels/feature/update/HotelUpdatePage.tsx
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import { useParams } from "react-router-dom";
 
 import HotelForm from "../../ui/HotelForm";
@@ -11,8 +13,8 @@ export default function HotelUpdatePage() {
   const { data: hotel, isLoading, isError } = useHotelQuery(id);
   const { onSubmit, isSubmitting } = useHotelSave({ id });
 
-  if (isLoading) return <div>Loading…</div>;
-  if (isError || !hotel) return <div>Not found</div>;
+  if (isLoading) return <Typography variant="body2">Loading…</Typography>;
+  if (isError || !hotel) return <Typography variant="body2">Not found</Typography>;
 
   const defaults: HotelFormValues = {
     name: hotel.name ?? "",
@@ -21,8 +23,11 @@ export default function HotelUpdatePage() {
   };
 
   return (
-    <>
-      <Heading mb={4}>Edit Hotel</Heading>
+    <Box>
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        Edit Hotel
+      </Typography>
+
       <HotelForm
         schema={hotelSchema}
         onSubmit={onSubmit}
@@ -31,6 +36,6 @@ export default function HotelUpdatePage() {
         defaultValues={defaults}
         isSubmitting={isSubmitting}
       />
-    </>
+    </Box>
   );
 }

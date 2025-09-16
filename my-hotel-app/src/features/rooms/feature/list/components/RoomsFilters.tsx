@@ -1,6 +1,13 @@
-import { HStack, Select, Checkbox, Portal } from "@chakra-ui/react";
-import { createListCollection } from "@chakra-ui/react";
+// src/features/rooms/ui/RoomsFilters.tsx
 import { useMemo } from "react";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import type { RoomType } from "../../../domain/types";
 
 type Props = {
@@ -16,68 +23,50 @@ export default function RoomsFilters({
   onTypeChange,
   onAvailableOnlyChange,
 }: Props) {
-  const roomTypeCollection = useMemo(
-    () =>
-      createListCollection({
-        items: [
-          { label: "All", value: "" },
-          { label: "Single", value: "SINGLE" },
-          { label: "Double", value: "DOUBLE" },
-          { label: "Suite", value: "SUITE" },
-          { label: "Family", value: "FAMILY" },
-        ],
-      }),
+  const items = useMemo(
+    () => [
+      { label: "All", value: "" as RoomType | "" },
+      { label: "Single", value: "SINGLE" as RoomType },
+      { label: "Double", value: "DOUBLE" as RoomType },
+      { label: "Suite", value: "SUITE" as RoomType },
+      { label: "Family", value: "FAMILY" as RoomType },
+    ],
     []
   );
 
   return (
-    <HStack gap={6} align="center">
+    <Stack direction="row" spacing={3} alignItems="center">
       {/* Type filter */}
-      <Select.Root
-        collection={roomTypeCollection}
-        value={type ? [type] : []}
-        onValueChange={({ value }) => {
-          const next = (value?.[0] ?? "") as RoomType | "";
-          onTypeChange(next);
-        }}
-        size="sm"
-        width="220px"
-      >
-        <Select.HiddenSelect />
-        <Select.Label>Type</Select.Label>
-        <Select.Control>
-          <Select.Trigger>
-            <Select.ValueText placeholder="All" />
-          </Select.Trigger>
-          <Select.IndicatorGroup>
-            <Select.Indicator />
-          </Select.IndicatorGroup>
-        </Select.Control>
-        <Portal>
-          <Select.Positioner>
-            <Select.Content>
-              {roomTypeCollection.items.map(
-                (it: { label: string; value: string }) => (
-                  <Select.Item item={it} key={it.value}>
-                    {it.label}
-                    <Select.ItemIndicator />
-                  </Select.Item>
-                )
-              )}
-            </Select.Content>
-          </Select.Positioner>
-        </Portal>
-      </Select.Root>
+      <Box sx={{ width: 220 }}>
+        <FormControl fullWidth size="small">
+          <InputLabel id="room-type-label">Type</InputLabel>
+          <Select
+            labelId="room-type-label"
+            id="room-type-select"
+            label="Type"
+            value={type}
+            onChange={(e) => onTypeChange((e.target.value as RoomType) || "")}
+          >
+            {items.map((it) => (
+              <MenuItem key={it.label} value={it.value}>
+                {it.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Available only */}
-      <Checkbox.Root
-        checked={availableOnly}
-        onCheckedChange={({ checked }) => onAvailableOnlyChange(!!checked)}
-      >
-        <Checkbox.HiddenInput />
-        <Checkbox.Control />
-        <Checkbox.Label>Available only</Checkbox.Label>
-      </Checkbox.Root>
-    </HStack>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={availableOnly}
+            onChange={(e) => onAvailableOnlyChange(e.target.checked)}
+            size="small"
+          />
+        }
+        label="Available only"
+      />
+    </Stack>
   );
 }

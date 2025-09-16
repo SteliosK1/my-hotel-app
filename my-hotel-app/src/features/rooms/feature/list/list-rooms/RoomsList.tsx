@@ -1,9 +1,15 @@
-import { Box, Heading, HStack, Spinner, Text, Stack } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
+
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+
 import RoomsFilters from "../components/RoomsFilters";
 import RoomsGrid from "../components/RoomsGrid";
 import RoomActions from "../components/RoomActions";
 import RoomForm from "../../../ui/RoomForm";
+
 import { useRoomsQuery } from "../../../data-access/useRoomQuery/useRoomsQuery";
 import { useCreateRoom, useUpdateRoom, useDeleteRoom } from "../../../data-access/mutation/useRoomMutations";
 import type { Room, RoomType } from "../../../domain/types";
@@ -35,7 +41,12 @@ export default function RoomsList({ hotelId }: Props) {
   const updateM = useUpdateRoom(hotelId);
   const deleteM = useDeleteRoom(hotelId);
 
-  const onCreate = async (values: { roomNumber: string; type: RoomType; pricePerNight: number | string; isAvailable: boolean }) => {
+  const onCreate = async (values: {
+    roomNumber: string;
+    type: RoomType;
+    pricePerNight: number | string;
+    isAvailable: boolean;
+  }) => {
     try {
       await createM.mutateAsync({
         hotelId,
@@ -48,7 +59,15 @@ export default function RoomsList({ hotelId }: Props) {
     } catch {}
   };
 
-  const onUpdate = async (id: string, values: { roomNumber: string; type: RoomType; pricePerNight: number | string; isAvailable: boolean }) => {
+  const onUpdate = async (
+    id: string,
+    values: {
+      roomNumber: string;
+      type: RoomType;
+      pricePerNight: number | string;
+      isAvailable: boolean;
+    }
+  ) => {
     try {
       await updateM.mutateAsync({
         id,
@@ -72,9 +91,17 @@ export default function RoomsList({ hotelId }: Props) {
 
   return (
     <Box>
-      <HStack justify="space-between" mb={4} flexWrap="wrap" gap={6} align="center">
-        <Heading size="md">Rooms</Heading>
-        <HStack gap={6} align="center">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        spacing={3}
+        sx={{ mb: 2 }}
+      >
+        <Typography variant="h6">Rooms</Typography>
+
+        <Stack direction="row" spacing={3} alignItems="center" flexWrap="wrap">
           <RoomsFilters
             type={type}
             availableOnly={availableOnly}
@@ -82,17 +109,21 @@ export default function RoomsList({ hotelId }: Props) {
             onAvailableOnlyChange={setAvailableOnly}
           />
           <RoomActions onAddRoom={() => setModalOpen(true)} />
-        </HStack>
-      </HStack>
+        </Stack>
+      </Stack>
 
       {isLoading && (
-        <Stack align="center" py={10}>
-          <Spinner borderWidth="4px" />
-          <Text>Loading…</Text>
+        <Stack alignItems="center" py={10} spacing={1.5}>
+          <CircularProgress thickness={4} />
+          <Typography variant="body2">Loading…</Typography>
         </Stack>
       )}
 
-      {error && <Text color="red.500">{(error as Error).message}</Text>}
+      {error && (
+        <Typography variant="body2" sx={{ color: "error.main" }}>
+          {(error as Error).message}
+        </Typography>
+      )}
 
       {!isLoading && !error && (
         <RoomsGrid rooms={visibleRooms} onEdit={setEditing} onDelete={onDelete} />

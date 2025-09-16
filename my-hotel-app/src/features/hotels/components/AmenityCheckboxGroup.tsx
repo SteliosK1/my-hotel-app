@@ -1,12 +1,21 @@
-import { Stack, HStack } from "@chakra-ui/react";
+import { FormControl, FormGroup, FormControlLabel, Checkbox, FormLabel, FormHelperText } from "@mui/material";
 import { AMENITY_OPTIONS, type AmenityOption } from "../constants/amenities";
 
 type Props = {
   value: string[];
   onChange: (next: string[]) => void;
+  label?: string;
+  disabled?: boolean;
+  error?: string | null;
 };
 
-export default function AmenityCheckboxGroup({ value, onChange }: Props) {
+export default function AmenityCheckboxGroup({
+  value = [],
+  onChange,
+  label = "Amenities",
+  disabled = false,
+  error = null,
+}: Props) {
   const toggle = (opt: AmenityOption, checked: boolean) => {
     const set = new Set(value);
     if (checked) set.add(opt);
@@ -15,23 +24,29 @@ export default function AmenityCheckboxGroup({ value, onChange }: Props) {
   };
 
   return (
-    <Stack gap={2}>
-      {AMENITY_OPTIONS.map((opt) => {
-        const id = `amenity-${opt}`;
-        const checked = value.includes(opt);
-        return (
-          <HStack key={opt} gap={2}>
-            <input
-              id={id}
-              type="checkbox"
-              checked={checked}
-              onChange={(e) => toggle(opt, e.target.checked)}
+    <FormControl component="fieldset" error={Boolean(error)} disabled={disabled} sx={{ width: "100%" }}>
+      <FormLabel component="legend" sx={{ mb: 1 }}>
+        {label}
+      </FormLabel>
+      <FormGroup>
+        {AMENITY_OPTIONS.map((opt) => {
+          const checked = value?.includes(opt);
+          return (
+            <FormControlLabel
+              key={opt}
+              label={opt}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={Boolean(checked)}
+                  onChange={(e) => toggle(opt, e.target.checked)}
+                />
+              }
             />
-            {/* ✅ Χρησιμοποιούμε native <label> για να αποφύγουμε το TS error με htmlFor */}
-            <label htmlFor={id}>{opt}</label>
-          </HStack>
-        );
-      })}
-    </Stack>
+          );
+        })}
+      </FormGroup>
+      {error && <FormHelperText>{error}</FormHelperText>}
+    </FormControl>
   );
 }

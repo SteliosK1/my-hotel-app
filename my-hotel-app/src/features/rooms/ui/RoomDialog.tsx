@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
-import { Box } from "@chakra-ui/react";
+import Dialog from "@mui/material/Dialog";
+import Box from "@mui/material/Box";
 
 type RoomDialogProps = {
   isOpen: boolean;
@@ -13,33 +14,29 @@ export function RoomDialog({
   labelledById,
   children,
 }: PropsWithChildren<RoomDialogProps>) {
-  if (!isOpen) return null;
-
   return (
-    <>
-      {/* Backdrop */}
-      <Box position="fixed" inset={0} bg="blackAlpha.500" zIndex={1200} onClick={onClose} />
-      {/* Panel */}
-      <Box
-        as="section"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledById}
-        position="fixed"
-        zIndex={1300}
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        bg="white"
-        border="1px solid var(--chakra-colors-gray-200)"
-        borderRadius={12}
-        p={5}
-        w="90%"
-        maxW={520}
-        boxShadow="var(--chakra-shadows-lg)"
-      >
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      aria-labelledby={labelledById}
+      // ίδιο περίπου sizing με το παλιό panel
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        // style κοντά στο Chakra: radius, padding, border
+        sx: {
+          borderRadius: 2, // ~12px
+          p: 3,            // ~24px
+          border: "1px solid",
+          borderColor: "divider",
+        },
+      }}
+      // backdrop click => onClose (default MUI behavior)
+    >
+      {/* Το περιεχόμενο του dialog */}
+      <Box component="section" role="document">
         {children}
       </Box>
-    </>
+    </Dialog>
   );
 }

@@ -1,16 +1,19 @@
 // src/features/rooms/ui/RoomCard.tsx
-import {
-  Box,
-  Flex,
-  Heading,
-  Badge,
-  Text,
-  HStack,
-  Button,
-  Spacer,
-} from "@chakra-ui/react";
 import { useState } from "react";
 import type { Room } from "../domain/types";
+
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 
 type Props = {
   room: Room;
@@ -27,117 +30,112 @@ export default function RoomCard({ room, onEdit, onDelete }: Props) {
   };
 
   return (
-    <Box
-      borderWidth="1px"
-      rounded="lg"
-      p={4}
-      shadow="sm"
-      _hover={{ shadow: "md" }}
-      h="100%"
-      display="flex"
-      flexDir="column"
-      gap={2}
-    >
-      {/* Header */}
-      <Flex align="center" gap={3} minH="28px" minW={0}>
-        {/* minW={0} για να λειτουργήσει το truncation */}
-        <Heading
-          size="sm"
-          truncate
-          maxW="100%"
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-        >
-          #{room.roomNumber} — {room.type}
-        </Heading>
+    <>
+      <Card
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          transition: "box-shadow 150ms",
+          "&:hover": { boxShadow: 4 },
+        }}
+      >
+        {/* Header */}
+        <CardContent sx={{ pb: 1.5 }}>
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minHeight: 28, minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={`#${room.roomNumber} — ${room.type}`}
+            >
+              #{room.roomNumber} — {room.type}
+            </Typography>
 
-        <Badge colorPalette={room.isAvailable ? "green" : "red"} flexShrink={0}>
-          {room.isAvailable ? "Available" : "Unavailable"}
-        </Badge>
+            <Chip
+              size="small"
+              label={room.isAvailable ? "Available" : "Unavailable"}
+              color={room.isAvailable ? "success" : "error"}
+              variant="outlined"
+              sx={{ flexShrink: 0 }}
+            />
 
-        <Spacer />
+            <Box sx={{ flexGrow: 1 }} />
 
-        <HStack gap={2} flexWrap="wrap">
-          {onEdit && (
-            <Button size="sm" onClick={() => onEdit(room)}>
-              Edit
-            </Button>
-          )}
-          {onDelete && (
-            <Button size="sm" variant="outline" onClick={() => setConfirmOpen(true)}>
-              Delete
-            </Button>
-          )}
-        </HStack>
-      </Flex>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              {onEdit && (
+                <Button size="small" variant="contained" color="inherit" onClick={() => onEdit(room)}>
+                  Edit
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ color: "white", backgroundColor: "black" }}
+                  onClick={() => setConfirmOpen(true)}
+                >
+                  Delete
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </CardContent>
 
-      {/* Body */}
-      <Box flex="1 1 auto" mt={1} minW={0}>
-        <Text
-          fontWeight="medium"
-          truncate
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-        >
-          €{room.pricePerNight} / night
-        </Text>
-        <Text
-          mt={1}
-          color="gray.500"
-          truncate
-          overflow="hidden"
-          textOverflow="ellipsis"
-          whiteSpace="nowrap"
-        >
-          {room.hotel?.name ?? room.hotelId}
-        </Text>
-      </Box>
-
-      {/* Lightweight confirm overlay */}
-      {confirmOpen && (
-        <>
-          {/* Backdrop */}
-          <Box
-            position="fixed"
-            inset={0}
-            bg="blackAlpha.500"
-            zIndex={1000}
-            onClick={() => setConfirmOpen(false)}
-          />
-          {/* Panel */}
-          <Box
-            position="fixed"
-            zIndex={1001}
-            top="50%"
-            left="50%"
-            transform="translate(-50%, -50%)"
-            bg="white"
-            borderWidth="1px"
-            rounded="lg"
-            p={5}
-            w="90%"
-            maxW="420px"
-            shadow="lg"
+        {/* Body */}
+        <CardContent sx={{ pt: 0, flex: "1 1 auto", minWidth: 0 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 600,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
           >
-            <Heading size="md" mb={2}>
-              Delete Room
-            </Heading>
-            <Text mb={4}>
-              Are you sure you want to delete room <b>{room.roomNumber}</b>? This action
-              cannot be undone.
-            </Text>
+            €{room.pricePerNight} / night
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 0.5,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={room.hotel?.name ?? String(room.hotelId)}
+          >
+            {room.hotel?.name ?? room.hotelId}
+          </Typography>
+        </CardContent>
 
-            <HStack justify="flex-end" gap={3}>
-              <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-              <Button colorScheme="red" onClick={handleConfirmDelete} variant="outline">
-                Delete
-              </Button>
-            </HStack>
-          </Box>
-        </>
-      )}
-    </Box>
+        {/* Footer (reserved for spacing/actions if χρειαστεί) */}
+        <CardActions sx={{ mt: "auto", pt: 0.5, pb: 1.5 }} />
+      </Card>
+
+      {/* Confirm Dialog */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Room</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Are you sure you want to delete room <b>{room.roomNumber}</b>? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

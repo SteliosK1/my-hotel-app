@@ -1,14 +1,14 @@
-import {
-  Card,
-  Heading,
-  Text,
-  Stack,
-  Badge,
-  HStack,
-  Button,
-} from "@chakra-ui/react";
+// src/features/hotels/components/HotelCard.tsx
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import type { Hotel } from "../domain/hotel";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
   const nav = useNavigate();
@@ -19,55 +19,81 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
   const extra = Math.max(0, amenities.length - shown.length);
 
   return (
-    <Card.Root
-      h="full"
-      p={4}
-      _hover={{ shadow: "md", cursor: "pointer" }}
-      transition="box-shadow 150ms"
-      display="flex"
-      flexDirection="column"
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        p: 2,
+        transition: "box-shadow 150ms",
+        cursor: "pointer",
+        "&:hover": { boxShadow: 4 },
+      }}
       onClick={() => nav(`/hotels/${hotel.id}`)}
       role="link"
       aria-label={`Open ${hotel.name} details`}
     >
-      <Stack gap={2} flex="1">
-        <Heading size="md">{hotel.name}</Heading>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" gutterBottom noWrap>
+          {hotel.name}
+        </Typography>
 
-        {hotel.description && <Text lineClamp={3}>{hotel.description}</Text>}
+        {hotel.description && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              mb: 1.5,
+            }}
+          >
+            {hotel.description}
+          </Typography>
+        )}
 
-        <HStack wrap="wrap" gap={2} minH="36px">
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ minHeight: 36 }}>
           {shown.map((a) => (
-            <Badge key={a}>{a}</Badge>
+            <Chip key={a} label={a} size="small" />
           ))}
-          {extra > 0 && <Badge>+{extra} more</Badge>}
-        </HStack>
-      </Stack>
+          {extra > 0 && <Chip label={`+${extra} more`} size="small" />}
+        </Stack>
+      </CardContent>
 
-      <HStack gap={2} pt={4}>
-        <RouterLink to={`/hotels/${hotel.id}`}>
-          <Button
-            bg="black"
-            color="white"
-            _hover={{ bg: "gray.900" }}
-            _active={{ bg: "gray.800" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            View Details
-          </Button>
-        </RouterLink>
+      <CardActions sx={{ pt: 0 }}>
+        <Box sx={{ ml: "auto" }} />
+        <Button
+          component={RouterLink}
+          to={`/hotels/${hotel.id}`}
+          variant="contained"
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            bgcolor: "common.black",
+            color: "common.white",
+            "&:hover": { bgcolor: "grey.900" },
+            "&:active": { bgcolor: "grey.800" },
+          }}
+        >
+          View Details
+        </Button>
 
-        <RouterLink to={`/hotels/${hotel.id}/edit`}>
-          <Button
-            bg="#D1D0D0"
-            color="black"
-            _hover={{ bg: "#bfbfbf" }}
-            _active={{ bg: "#a6a6a6" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            Edit
-          </Button>
-        </RouterLink>
-      </HStack>
-    </Card.Root>
+        <Button
+          component={RouterLink}
+          to={`/hotels/${hotel.id}/edit`}
+          variant="contained"
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            bgcolor: "#D1D0D0",
+            color: "common.black",
+            "&:hover": { bgcolor: "#bfbfbf" },
+            "&:active": { bgcolor: "#a6a6a6" },
+          }}
+        >
+          Edit
+        </Button>
+      </CardActions>
+    </Card>
   );
 }

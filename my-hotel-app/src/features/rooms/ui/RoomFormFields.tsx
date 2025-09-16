@@ -1,32 +1,42 @@
-// src/features/rooms/ui/RoomFormFields.tsx
-import {
-  Field,
-  Input,
-  HStack,
-  Button,
-  Heading,
-  NativeSelect,
-  Checkbox,
-} from "@chakra-ui/react";
-import { Controller } from "react-hook-form";
-import type { UseFormReturn } from "react-hook-form";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import InputLabel from "@mui/material/InputLabel";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import { LoadingButton } from "@mui/lab";
+import Typography from "@mui/material/Typography";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import type { RoomFormValues } from "../schemas/roomFormSchema";
-import { ROOM_TYPES } from "../constants/roomTypes";
+import { ROOM_TYPES } from "../constants/roomTypes"; // [{ value, label }...]
 
 type Props = {
   form: UseFormReturn<RoomFormValues>;
-  title?: string;
-  submitLabel?: string;
-  onCancel?: () => void;
+  title: string;
+  submitLabel: string;
   submitting?: boolean;
+  onCancel: () => void;
+};
+
+const normalizeType = (val: unknown) => {
+  const allowed = ROOM_TYPES.map((t) => String(t.value));
+  if (typeof val !== "string") return "";
+  const byLabel = ROOM_TYPES.find((t) => t.label === val);
+  if (byLabel) return String(byLabel.value);
+  return allowed.includes(val) ? val : "";
 };
 
 export function RoomFormFields({
   form,
-  title = "Room",
-  submitLabel = "Save",
+  title,
+  submitLabel,
+  submitting = false,
   onCancel,
-  submitting,
 }: Props) {
   const {
     register,
@@ -35,86 +45,95 @@ export function RoomFormFields({
   } = form;
 
   return (
-    <>
-      <Heading id="room-form-title" size="md" mb={4}>
+    <Stack spacing={2}>
+      <DialogTitle id="room-form-title" sx={{ p: 0 }}>
         {title}
-      </Heading>
+      </DialogTitle>
 
-      {/* Room Number */}
-      <Field.Root invalid={!!errors.roomNumber} required mb={3}>
-        <Field.Label>Room Number</Field.Label>
-        <Input placeholder="e.g. 101" {...register("roomNumber")} />
-        <Field.ErrorText>{errors.roomNumber?.message}</Field.ErrorText>
-      </Field.Root>
+      {/* Room number */}
+      <TextField
+        label="Room number"
+        placeholder="e.g. 101"
+        fullWidth
+        {...register("roomNumber")}
+        error={Boolean(errors.roomNumber)}
+        helperText={errors.roomNumber ? String(errors.roomNumber.message) : ""}
+      />
 
-      {/* Type (NativeSelect) */}
-      <Field.Root invalid={!!errors.type} required mb={3}>
-        <Field.Label>Type</Field.Label>
+      {/* Type (Select, fully controlled) */}
+      <FormControl fullWidth error={!!errors.type}>
+        <InputLabel id="room-type-label">Type</InputLabel>
         <Controller
           name="type"
           control={control}
           render={({ field }) => (
-            <NativeSelect.Root
-              defaultValue={field.value ?? ""}
-              onChange={(event) => field.onChange((event.target as HTMLSelectElement).value)}
+            <Select
+              labelId="room-type-label"
+              id="room-type-select"
+              label="Type"
+              // ✅ ποτέ undefined -> κρατάμε controlled Select
+              value={normalizeType(field.value)}
+              onChange={(e) => field.onChange(normalizeType(e.target.value))}
             >
-              <NativeSelect.Field>
-                {ROOM_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </NativeSelect.Field>
-            </NativeSelect.Root>
+              {ROOM_TYPES.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Select>
           )}
         />
-        <Field.ErrorText>{errors.type?.message}</Field.ErrorText>
-      </Field.Root>
+        {errors.type && (
+          <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+            {String(errors.type.message)}
+          </Typography>
+        )}
+      </FormControl>
 
       {/* Price per night */}
-      <Field.Root invalid={!!errors.pricePerNight} required mb={3}>
-        <Field.Label>Price per night</Field.Label>
-        <Input
-          type="number"
-          step="0.01"
-          min="0"
-          {...register("pricePerNight", { valueAsNumber: true })}
-        />
-        <Field.ErrorText>{errors.pricePerNight?.message}</Field.ErrorText>
-      </Field.Root>
+      <TextField
+        label="Price per night (€)"
+        placeholder="e.g. 120"
+        fullWidth
+        type="number"
+        inputProps={{ min: 0, step: 1 }}
+        {...register("pricePerNight")}
+        error={Boolean(errors.pricePerNight)}
+        helperText={
+          errors.pricePerNight ? String(errors.pricePerNight.message) : ""
+        }
+      />
 
       {/* Availability */}
-      {/* Availability */}
-<Field.Root mb={4}>
-  <Controller
-    name="isAvailable"
-    control={control}
-    render={({ field: { value, onChange, ref, name } }) => (
-      <Checkbox.Root
-        checked={!!value}
-        // Στο v3 ο handler παίρνει (checked: boolean | "indeterminate")
-        onCheckedChange={({ checked }) => onChange(checked === true || checked === "indeterminate")}
-      >
-        <Checkbox.Control />
-        <Checkbox.Label>Available</Checkbox.Label>
-        {/* Κρατά τη σύνδεση με τα forms/RHF refs */}
-        <Checkbox.HiddenInput ref={ref} name={name} />
-      </Checkbox.Root>
-    )}
-  />
-</Field.Root>
+      <FormControlLabel
+        control={
+          <Controller
+            name="isAvailable"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <Switch
+                checked={Boolean(value)}
+                onChange={(e) => onChange(e.target.checked)}
+              />
+            )}
+          />
+        }
+        label="Available"
+      />
 
-
-      <HStack justify="flex-end" gap={3}>
-        {onCancel && (
-          <Button variant="ghost" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" loading={!!submitting}>
-          {submitLabel}
+      <DialogActions sx={{ px: 0 }}>
+        <Button onClick={onCancel} disabled={submitting}>
+          Cancel
         </Button>
-      </HStack>
-    </>
+        <LoadingButton
+          type="submit"
+          variant="contained"
+          color="primary"
+          loading={submitting}
+        >
+          {submitLabel}
+        </LoadingButton>
+      </DialogActions>
+    </Stack>
   );
 }

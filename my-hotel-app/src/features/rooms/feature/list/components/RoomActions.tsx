@@ -1,4 +1,5 @@
-import { Button } from "@chakra-ui/react";
+// src/features/rooms/ui/RoomActions.tsx
+import Button from "@mui/material/Button";
 
 type Props = {
   onAddRoom: () => void;
@@ -6,7 +7,7 @@ type Props = {
 
 export default function RoomActions({ onAddRoom }: Props) {
   return (
-    <Button onClick={onAddRoom} colorScheme="blue">
+    <Button sx={{ variant: "contained", color: "white", backgroundColor: "black" }} onClick={onAddRoom}>
       Add Room
     </Button>
   );

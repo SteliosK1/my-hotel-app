@@ -1,12 +1,18 @@
+// src/features/hotels/feature/view/HotelViewPage.tsx
 import { useParams, Link as RouterLink, useNavigate } from "react-router-dom";
-import { Heading, Text, Button, Stack, HStack, Badge, VStack } from "@chakra-ui/react";
 import { useState } from "react";
+
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+
 import { useHotelQuery } from "../../data-access/useHotelQuery";
 import { useDeleteHotelMutation } from "../../data-access/useDeleteMutation";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import { useToastify } from "@/lib/useToastify";
 import RoomsList from "@/features/rooms/feature/list/list-rooms/RoomsList"; // έλεγξε ότι αυτό το path υπάρχει
-
 
 export default function HotelViewPage() {
   const { id = "" } = useParams();
@@ -15,10 +21,10 @@ export default function HotelViewPage() {
   const del = useDeleteHotelMutation();
   const t = useToastify();
   const [open, setOpen] = useState(false);
-  const hotelId = id; // ή hotel?.id αν ήδη έχεις το hotel από αλλού
+  const hotelId = id;
 
-  if (isLoading) return <Text>Loading…</Text>;
-  if (isError || !hotel) return <Text>Not found</Text>;
+  if (isLoading) return <Typography>Loading…</Typography>;
+  if (isError || !hotel) return <Typography>Not found</Typography>;
 
   const handleDelete = async () => {
     try {
@@ -34,26 +40,47 @@ export default function HotelViewPage() {
   };
 
   return (
-    <Stack gap={3}>
-      <Heading>{hotel.name}</Heading>
-      {hotel.description && <Text>{hotel.description}</Text>}
-      <Stack direction="row" wrap="wrap" gap={2}>
-        {hotel.amenities.map((a) => (
-          <Badge key={a}>{a}</Badge>
+    <Stack spacing={3}>
+      <Typography variant="h5">{hotel.name}</Typography>
+
+      {hotel.description && (
+        <Typography variant="body2" color="text.secondary">
+          {hotel.description}
+        </Typography>
+      )}
+
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        {hotel.amenities?.map((a: string) => (
+          <Chip key={a} label={a} size="small" />
         ))}
       </Stack>
 
-      <HStack gap={3}>
-        <RouterLink to="/hotels">
-          <Button>Back to List</Button>
-        </RouterLink>
-        <RouterLink to={`/hotels/${hotel.id}/edit`}>
-          <Button>Edit</Button>
-        </RouterLink>
-        <Button onClick={() => setOpen(true)} disabled={del.isPending}>
+      <Stack direction="row" spacing={1.5}>
+        {/* palette.primary (outlined) */}
+        <Button component={RouterLink} to="/hotels" variant="outlined" sx={{ color: "black", borderColor: "black" }}>
+          Back to List
+        </Button>
+
+        {/* Custom gray color for Edit button */}
+        <Button
+          component={RouterLink}
+          to={`/hotels/${hotel.id}/edit`}
+          variant="contained"
+          sx={{ backgroundColor: "gray", color: "white", "&:hover": { backgroundColor: "darkgray" } }}
+        >
+          Edit
+        </Button>
+
+        {/* Custom black color for Delete button */}
+        <Button
+          onClick={() => setOpen(true)}
+          disabled={del.isPending}
+          variant="contained"
+          sx={{ backgroundColor: "black", color: "white", "&:hover": { backgroundColor: "#1f1e1e" } }}
+        >
           {del.isPending ? "Deleting…" : "Delete"}
         </Button>
-      </HStack>
+      </Stack>
 
       <DeleteConfirm
         isOpen={open}
@@ -61,11 +88,13 @@ export default function HotelViewPage() {
         onConfirm={handleDelete}
         name={hotel.name}
       />
-      <VStack align="stretch" gap={6}>
-        <Heading size="lg">Hotel details</Heading>
-        {hotelId && <RoomsList hotelId={hotelId} />}   {/* <--- ΤΩΡΑ γνωρίζει RoomsList & hotelId */}
-      </VStack>
 
+      <Box>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          Hotel details
+        </Typography>
+        {hotelId && <RoomsList hotelId={hotelId} />}
+      </Box>
     </Stack>
   );
 }

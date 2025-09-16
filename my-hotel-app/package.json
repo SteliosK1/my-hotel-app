@@ -11,7 +11,7 @@
     "server": "json-server --watch db.json --port 4000"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.26.0",
+    "@chakra-ui/react": "^3.27.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "3.3.4",

@@ -84,23 +84,26 @@ export function RoomFormFields({
       </Field.Root>
 
       {/* Availability */}
-      <Field.Root mb={4}>
-        <Controller
-          name="isAvailable"
-          control={control}
-          render={({ field }) => (
-            <Checkbox.Root
-              checked={!!field.value}
-              onCheckedChange={(details) =>
-                field.onChange(details.checked === true)
-              }
-            >
-              <Checkbox.Control />
-              <Checkbox.Label>Available</Checkbox.Label>
-            </Checkbox.Root>
-          )}
-        />
-      </Field.Root>
+      {/* Availability */}
+<Field.Root mb={4}>
+  <Controller
+    name="isAvailable"
+    control={control}
+    render={({ field: { value, onChange, ref, name } }) => (
+      <Checkbox.Root
+        checked={!!value}
+        // Στο v3 ο handler παίρνει (checked: boolean | "indeterminate")
+        onCheckedChange={({ checked }) => onChange(checked === true || checked === "indeterminate")}
+      >
+        <Checkbox.Control />
+        <Checkbox.Label>Available</Checkbox.Label>
+        {/* Κρατά τη σύνδεση με τα forms/RHF refs */}
+        <Checkbox.HiddenInput ref={ref} name={name} />
+      </Checkbox.Root>
+    )}
+  />
+</Field.Root>
+
 
       <HStack justify="flex-end" gap={3}>
         {onCancel && (

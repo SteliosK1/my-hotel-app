@@ -32,7 +32,6 @@ export default function HotelUpdatePage() {
         schema={hotelSchema}
         onSubmit={onSubmit}
         submitText="Update"
-        amenitiesAsCheckboxes
         defaultValues={defaults}
         isSubmitting={isSubmitting}
       />

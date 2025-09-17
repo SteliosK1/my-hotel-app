@@ -1,9 +1,9 @@
+// src/features/rooms/ui/RoomFormFields.tsx
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";// (δεν το χρησιμοποιούμε στο native mode, μπορείς να το αφαιρέσεις)
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -11,7 +11,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import { LoadingButton } from "@mui/lab";
 import Typography from "@mui/material/Typography";
-import { Controller, type UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import type { RoomFormValues } from "../schemas/roomFormSchema";
 import { ROOM_TYPES } from "../constants/roomTypes"; // [{ value, label }...]
 
@@ -23,14 +23,6 @@ type Props = {
   onCancel: () => void;
 };
 
-const normalizeType = (val: unknown) => {
-  const allowed = ROOM_TYPES.map((t) => String(t.value));
-  if (typeof val !== "string") return "";
-  const byLabel = ROOM_TYPES.find((t) => t.label === val);
-  if (byLabel) return String(byLabel.value);
-  return allowed.includes(val) ? val : "";
-};
-
 export function RoomFormFields({
   form,
   title,
@@ -40,7 +32,6 @@ export function RoomFormFields({
 }: Props) {
   const {
     register,
-    control,
     formState: { errors },
   } = form;
 
@@ -56,33 +47,30 @@ export function RoomFormFields({
         placeholder="e.g. 101"
         fullWidth
         {...register("roomNumber")}
-        error={Boolean(errors.roomNumber)}
+        error={!!errors.roomNumber}
         helperText={errors.roomNumber ? String(errors.roomNumber.message) : ""}
       />
 
-      {/* Type (Select, fully controlled) */}
+      {/* Type (MUI Select σε native mode ώστε να παίζει με register, ΧΩΡΙΣ Controller) */}
       <FormControl fullWidth error={!!errors.type}>
-        <InputLabel id="room-type-label">Type</InputLabel>
-        <Controller
-          name="type"
-          control={control}
-          render={({ field }) => (
-            <Select
-              labelId="room-type-label"
-              id="room-type-select"
-              label="Type"
-              // ✅ ποτέ undefined -> κρατάμε controlled Select
-              value={normalizeType(field.value)}
-              onChange={(e) => field.onChange(normalizeType(e.target.value))}
-            >
-              {ROOM_TYPES.map((opt) => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
-        />
+        <InputLabel htmlFor="room-type-native">Type</InputLabel>
+        <Select
+          native
+          label="Type"
+          inputProps={{
+            id: "room-type-native",
+            // το register πάει στο πραγματικό <select> input
+            ...register("type"),
+          }}
+        >
+          {/* προαιρετικό placeholder αν θες “κενό” */}
+          {/* <option value="" disabled>Select type…</option> */}
+          {ROOM_TYPES.map((opt) => (
+            <option key={String(opt.value)} value={String(opt.value)}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
         {errors.type && (
           <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
             {String(errors.type.message)}
@@ -98,24 +86,16 @@ export function RoomFormFields({
         type="number"
         inputProps={{ min: 0, step: 1 }}
         {...register("pricePerNight")}
-        error={Boolean(errors.pricePerNight)}
-        helperText={
-          errors.pricePerNight ? String(errors.pricePerNight.message) : ""
-        }
+        error={!!errors.pricePerNight}
+        helperText={errors.pricePerNight ? String(errors.pricePerNight.message) : ""}
       />
 
-      {/* Availability */}
+      {/* Availability (Switch) — ΧΩΡΙΣ Controller, απευθείας register */}
       <FormControlLabel
         control={
-          <Controller
-            name="isAvailable"
-            control={control}
-            render={({ field: { value, onChange } }) => (
-              <Switch
-                checked={Boolean(value)}
-                onChange={(e) => onChange(e.target.checked)}
-              />
-            )}
+          <Switch
+            // RHF θα χειριστεί το checkbox ως boolean με βάση το checked
+            {...register("isAvailable")}
           />
         }
         label="Available"

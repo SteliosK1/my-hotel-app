@@ -11,7 +11,7 @@ import { useHotelsPagedQuery } from "../../../data-access/useHotelsPagedQuery";
 
 export default function HotelsListPage() {
   const [page, setPage] = useState(1);
-  const perPage = 1 as const; // 👈 1 hotel ανά σελίδα (ίδιο με πριν)
+  const perPage = 3 as const; // 👈 1 hotel ανά σελίδα (ίδιο με πριν)
   const order: "asc" | "desc" = "desc";
 
   const { data, isLoading } = useHotelsPagedQuery(page, perPage, order);

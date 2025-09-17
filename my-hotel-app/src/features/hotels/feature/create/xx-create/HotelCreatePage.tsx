@@ -19,7 +19,6 @@ export default function HotelCreatePage() {
         schema={hotelSchema}
         onSubmit={onSubmit}
         submitText="Create"
-        amenitiesAsCheckboxes
         defaultValues={{ name: "", description: "", amenities: [] } as HotelFormValues}
         isSubmitting={isSubmitting}
       />

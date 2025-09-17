@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+// src/features/rooms/ui/RoomForm.tsx
+import { FormContainer } from "react-hook-form-mui";
 import { RoomDialog } from "./RoomDialog";
-import { RoomFormFields } from "./RoomFormFields";
-import { useRoomForm } from "../hooks/useRoomForm";
+import RoomFormFields from "./RoomFormFields"; // ✅ default import
+import { useRoomFormElements } from "../hooks/useRoomForm";
 import type { RoomFormValues } from "../schemas/roomFormSchema";
-import { ROOM_TYPES } from "../constants/roomTypes"; // [{ value: "SINGLE", label: "Single" }, ...]
 
 type Props = {
   isOpen: boolean;
@@ -14,15 +13,8 @@ type Props = {
   mode?: "create" | "edit";
   title?: string;
   submitLabel?: string;
-};
-
-// φέρνει ό,τι κι αν έρθει (label/value/undefined) σε έγκυρο value του ROOM_TYPES
-const normalizeType = (val: unknown): "SINGLE" | "DOUBLE" | "SUITE" | "FAMILY" | undefined => {
-  const allowed = ROOM_TYPES.map((t) => t.value);
-  if (typeof val !== "string") return undefined;
-  const byLabel = ROOM_TYPES.find((t) => t.label === val);
-  if (byLabel) return byLabel.value as "SINGLE" | "DOUBLE" | "SUITE" | "FAMILY";
-  return allowed.includes(val as any) ? (val as "SINGLE" | "DOUBLE" | "SUITE" | "FAMILY") : undefined;
+  /** προαιρετικό εξωτερικό loading από mutation */
+  isSubmitting?: boolean;
 };
 
 export default function RoomForm({
@@ -33,54 +25,34 @@ export default function RoomForm({
   mode = "create",
   title,
   submitLabel,
+  isSubmitting,
 }: Props) {
   const computedTitle = title ?? (mode === "edit" ? "Edit Room" : "Add Room");
   const computedSubmit =
     submitLabel ?? (mode === "edit" ? "Save changes" : "Create room");
 
-  const [saving, setSaving] = useState(false);
-
-  const { form, handleSubmit } = useRoomForm({
+  // 🔗 Elements-friendly hook: δίνει resolver/defaultValues/onSuccess
+  const { resolver, defaultValues, onSuccess } = useRoomFormElements({
     initialValues,
-    onSubmit: async (values) => {
-      try {
-        setSaving(true);
-        await onSubmit(values);
-        onClose();
-      } finally {
-        setSaving(false);
-      }
-    },
+    onSubmit,
   });
-
-  // Όταν αλλάζει το room που κάνουμε edit, κάνε reset τα default values
-  useEffect(() => {
-    form.reset({
-      roomNumber: initialValues?.roomNumber ?? "",
-      type: normalizeType(initialValues?.type),
-      pricePerNight:
-        (initialValues?.pricePerNight as any) ?? "", // αφήνουμε empty string για το TextField
-      isAvailable: Boolean(initialValues?.isAvailable),
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues]);
-
-  const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    handleSubmit();
-  };
 
   return (
     <RoomDialog isOpen={isOpen} onClose={onClose} labelledById="room-form-title">
-      <form onSubmit={onFormSubmit} noValidate>
+      {/* ΟΛΑ τα Elements πρέπει να είναι μέσα σε FormContainer */}
+      <FormContainer
+        resolver={resolver}
+        defaultValues={defaultValues}
+        onSuccess={onSuccess} // καλείται μόνο αν περάσει τη validation
+      >
+        {/* Δεν χρειάζεται extra <form> εδώ—το FormContainer τυλίγει με form */}
         <RoomFormFields
-          form={form}
           title={computedTitle}
           submitLabel={computedSubmit}
+          submitting={Boolean(isSubmitting)}
           onCancel={onClose}
-          submitting={saving}
         />
-      </form>
+      </FormContainer>
     </RoomDialog>
   );
 }

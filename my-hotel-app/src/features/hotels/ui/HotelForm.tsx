@@ -1,123 +1,91 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import type { ZodTypeAny, z } from "zod";
+
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import FormControl from "@mui/material/FormControl";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import FormHelperText from "@mui/material/FormHelperText";
 import { LoadingButton } from "@mui/lab";
-import type { ZodTypeAny } from "zod";
+
+import {
+  FormContainer,
+  TextFieldElement,
+  CheckboxButtonGroup,
+  useFormContext, // για να πάρουμε isSubmitting από το form
+} from "react-hook-form-mui";
+
 import { AMENITY_OPTIONS } from "../constants/amenities";
 
 type Props<TSchema extends ZodTypeAny> = {
   schema: TSchema;
-  onSubmit: (values: any) => Promise<void> | void;
-  defaultValues?: any;          // { name, description, amenities?: string[] }
+  onSubmit: (values: z.infer<TSchema>) => Promise<void> | void;
+  defaultValues?: Partial<z.infer<TSchema>>; // { name, description, amenities?: string[] }
   submitText?: string;
-  isSubmitting?: boolean;       // εξωτερικό loading (π.χ. mutation)
+  isSubmitting?: boolean; // εξωτερικό loading (π.χ. mutation)
 };
+
+// Μικρό child component μόνο για το submit button ώστε να πάρουμε το isSubmitting από RHF
+function SubmitButton({ label, externalLoading }: { label: string; externalLoading?: boolean }) {
+  const { formState: { isSubmitting } } = useFormContext();
+  const loading = externalLoading ?? isSubmitting;
+  return (
+    <LoadingButton type="submit" variant="contained" loading={loading} disabled={loading}>
+      {label}
+    </LoadingButton>
+  );
+}
 
 export default function HotelForm<TSchema extends ZodTypeAny>({
   schema,
   onSubmit,
   defaultValues,
   submitText = "Save",
-  isSubmitting: externalSubmitting,
+  isSubmitting,
 }: Props<TSchema>) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<any>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      description: "",
-      amenities: [],
-      ...(defaultValues ?? {}),
-    },
-  });
-
-  const submitting = externalSubmitting ?? isSubmitting;
-  const selectedAmenities: string[] = Array.isArray(defaultValues?.amenities)
-    ? defaultValues.amenities
-    : [];
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <FormContainer
+      resolver={zodResolver(schema)}
+      defaultValues={{
+        name: "",
+        description: "",
+        amenities: [],
+        ...(defaultValues ?? {}),
+      }}
+      // onSuccess καλείται μόνο αν περάσει η validation
+      onSuccess={async (vals) => {
+        // (προαιρετικά) καθάρισε διπλές τιμές στα amenities
+        const values = { ...vals, amenities: Array.from(new Set((vals as any).amenities ?? [])) };
+        await onSubmit(values as z.infer<TSchema>);
+      }}
+    >
       <Stack spacing={2.5}>
-        {/* Name */}
-        <TextField
+        <TextFieldElement
+          name="name"
           label="Name"
           placeholder="Hotel name"
           fullWidth
-          {...register("name")}
-          error={Boolean(errors?.name)}
-          helperText={errors?.name ? String((errors.name as any).message) : ""}
+          required
         />
 
-        {/* Description */}
-        <TextField
+        <TextFieldElement
+          name="description"
           label="Description"
           placeholder="Short description"
           fullWidth
           multiline
           minRows={3}
-          {...register("description")}
-          error={Boolean(errors?.description)}
-          helperText={
-            errors?.description ? String((errors.description as any).message) : ""
-          }
+          required
         />
 
-        {/* Amenities (checkbox group) — χωρίς Controller */}
-        <FormControl
-          component="fieldset"
-          error={Boolean(errors?.amenities)}
-          sx={{ width: "100%" }}
-        >
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Amenities
-          </Typography>
+        <Stack spacing={1}>
+          <Typography variant="subtitle1">Amenities</Typography>
+          <CheckboxButtonGroup
+            name="amenities"
+            options={AMENITY_OPTIONS as unknown as string[]} // δέχεται string[] ή {id,label}
+            // (προαιρετικά) μπορείς να περάσεις row / helperText κ.λπ.
+          />
+        </Stack>
 
-          <FormGroup>
-            {AMENITY_OPTIONS.map((opt) => (
-              <FormControlLabel
-                key={opt}
-                label={opt}
-                control={
-                  <Checkbox
-                    // ίδιο name για όλα τα checkboxes -> RHF φτιάχνει string[]
-                    {...register("amenities")}
-                    value={opt}
-                    // σωστό checked state όταν κάνεις Edit
-                    defaultChecked={selectedAmenities.includes(opt)}
-                    size="small"
-                  />
-                }
-              />
-            ))}
-          </FormGroup>
-
-          {errors?.amenities && (
-            <FormHelperText>
-              {String((errors.amenities as any)?.message ?? "")}
-            </FormHelperText>
-          )}
-        </FormControl>
-
-        <LoadingButton
-          type="submit"
-          variant="contained"
-          loading={Boolean(submitting)}
-          disabled={Boolean(submitting)}
-        >
-          {submitText}
-        </LoadingButton>
+        <SubmitButton label={submitText} externalLoading={isSubmitting} />
       </Stack>
-    </form>
+    </FormContainer>
   );
 }
